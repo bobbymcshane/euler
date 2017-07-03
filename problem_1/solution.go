@@ -12,11 +12,14 @@ func main() {
 
 	var sum int
 	for {
-		next := <-c
-		if next < 23 {
-			sum += next
-		} else {
-			break
+		next, ok := <-c
+		if ok {
+			if next < 1000 {
+				sum += next
+			} else {
+				close(done)
+				break
+			}
 		}
 	}
 	fmt.Println(sum)

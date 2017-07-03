@@ -2,7 +2,7 @@ package lib
 
 // output multiples of the provided number to the returned channel until the
 // done channel is closed
-func MultiplesOf(num int, done chan struct{}) chan int {
+func MultiplesOf(num int, done chan struct{}) <-chan int {
 	output := make(chan int, 1)
 	go func() {
 		var cur int
@@ -47,7 +47,7 @@ func (bc *BufferedChannel) Receive() (next int, ok bool) {
 
 // merge sorted input channels into a single output channel. if unique is true,
 // duplicate values across channels will be squashed into a single value
-func MergedSortedChannel(sortedChannels []chan int, unique bool) chan int {
+func MergedSortedChannel(sortedChannels []chan int, unique bool) <-chan int {
 	output := make(chan int)
 	go func() {
 		// get a list of BufferedChannels so we can peek at the next value
@@ -91,6 +91,29 @@ func MergedSortedChannel(sortedChannels []chan int, unique bool) chan int {
 
 			// clear out our list of lowest channels for reuse
 			lowestChans = lowestChans[0:0]
+		}
+	}()
+	return output
+}
+
+// output values for the fibonacci sequence on the returned channel
+func Fib(done <-chan struct{}) <-chan int {
+	output := make(chan int)
+	go func() {
+		prev := 1
+		current := 2
+		output <- prev
+		output <- current
+		for {
+			tmp := current
+			current = prev + current
+			prev = tmp
+			select {
+			case output <- current:
+			case <-done:
+				close(output)
+				return
+			}
 		}
 	}()
 	return output

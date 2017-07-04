@@ -8,7 +8,7 @@ import (
 func main() {
 	done := make(chan struct{})
 	fib := lib.Fib(done)
-	var sum int
+	var sum int64
 	for {
 		term := <-fib
 		if term > 4000000 {

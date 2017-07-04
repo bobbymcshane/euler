@@ -2,10 +2,10 @@ package lib
 
 // output multiples of the provided number to the returned channel until the
 // done channel is closed
-func MultiplesOf(num int, done chan struct{}) <-chan int {
-	output := make(chan int, 1)
+func MultiplesOf(num int64, done chan struct{}) <-chan int64 {
+	output := make(chan int64, 1)
 	go func() {
-		var cur int
+		var cur int64
 		for {
 			cur += num
 			select {
@@ -23,22 +23,22 @@ func MultiplesOf(num int, done chan struct{}) <-chan int {
 // item available on the channel
 type BufferedChannel struct {
 	ok      bool
-	next    int
-	channel <-chan int
+	next    int64
+	channel <-chan int64
 }
 
-func NewBufferedChannel(channel <-chan int) *BufferedChannel {
+func NewBufferedChannel(channel <-chan int64) *BufferedChannel {
 	next, ok := <-channel
 	return &BufferedChannel{ok, next, channel}
 }
 
-func (bc *BufferedChannel) Peek() (next int, ok bool) {
+func (bc *BufferedChannel) Peek() (next int64, ok bool) {
 	next = bc.next
 	ok = bc.ok
 	return
 }
 
-func (bc *BufferedChannel) Receive() (next int, ok bool) {
+func (bc *BufferedChannel) Receive() (next int64, ok bool) {
 	next = bc.next
 	ok = bc.ok
 	bc.next, bc.ok = <-bc.channel
@@ -47,8 +47,8 @@ func (bc *BufferedChannel) Receive() (next int, ok bool) {
 
 // merge sorted input channels into a single output channel. if unique is true,
 // duplicate values across channels will be squashed into a single value
-func MergedSortedChannel(sortedChannels []chan int, unique bool) <-chan int {
-	output := make(chan int)
+func MergedSortedChannel(sortedChannels []chan int64, unique bool) <-chan int64 {
+	output := make(chan int64)
 	go func() {
 		// get a list of BufferedChannels so we can peek at the next value
 		chans := make([]*BufferedChannel, len(sortedChannels))
@@ -58,7 +58,7 @@ func MergedSortedChannel(sortedChannels []chan int, unique bool) <-chan int {
 
 		lowestChans := make([]*BufferedChannel, 0, len(sortedChannels))
 		for {
-			var lowestValue int
+			var lowestValue int64
 			// find the channels with the lowest next value
 			for i, c := range chans {
 				next, ok := c.Peek()
@@ -97,11 +97,11 @@ func MergedSortedChannel(sortedChannels []chan int, unique bool) <-chan int {
 }
 
 // output values for the fibonacci sequence on the returned channel
-func Fib(done <-chan struct{}) <-chan int {
-	output := make(chan int)
+func Fib(done <-chan struct{}) <-chan int64 {
+	output := make(chan int64)
 	go func() {
-		prev := 1
-		current := 2
+		prev := int64(1)
+		current := int64(1)
 		output <- prev
 		output <- current
 		for {
@@ -117,4 +117,15 @@ func Fib(done <-chan struct{}) <-chan int {
 		}
 	}()
 	return output
+}
+
+// return the number of digits in the nth fibonacci number
+// NOTE: This function doesn't appear to work yet
+func FibNDigits(term int) int {
+	switch term {
+	case 1:
+		return 1
+	default:
+		return ((term - 2) / 5) + 1
+	}
 }

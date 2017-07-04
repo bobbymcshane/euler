@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bufio"
+	"encoding/csv"
 	"fmt"
 	"os"
 	"sort"
@@ -50,15 +50,8 @@ func main() {
 	var names sort.StringSlice
 
 	// create a new scanner and read the file line by line
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		names = append(names, scanner.Text())
-	}
-
-	// check for errors
-	if err = scanner.Err(); err != nil {
-		panic(err)
-	}
+	reader := csv.NewReader(f)
+	names, _ = reader.Read()
 
 	// close our file as we no longer need it
 	f.Close()
@@ -76,7 +69,8 @@ func main() {
 	}
 
 	for i, name := range names {
-		nameChan <- namePosition{strings.ToLower(name), i + 1}
+		np := namePosition{strings.ToLower(name), i + 1}
+		nameChan <- np
 	}
 	close(nameChan)
 

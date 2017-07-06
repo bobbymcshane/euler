@@ -1,5 +1,9 @@
 package lib
 
+import (
+	"math"
+)
+
 // output multiples of the provided number to the returned channel until the
 // done channel is closed
 func MultiplesOf(num int64, done chan struct{}) <-chan int64 {
@@ -128,4 +132,35 @@ func FibNDigits(term int) int {
 	default:
 		return ((term - 2) / 5) + 1
 	}
+}
+
+// output all prime numbers less than maxPrime on the returned channel
+func Primes(maxPrime int64) <-chan int64 {
+	output := make(chan int64)
+	go func() {
+		output <- 1
+		output <- 2
+		// list should be large enough to hold all odd numbers less than maxPrime
+		numOdds := int64(math.Ceil(float64(maxPrime) / 2.0))
+		isOddComposite := make([]bool, numOdds)
+		for i := int64(3); i <= maxPrime; i += int64(2) {
+			if isOddComposite[i/2] {
+				// nothing to do because this number is not prime
+			} else {
+				// i is a prime number
+				output <- i
+				// mark all multiples of i as odd composites
+				maxMultiple := maxPrime / i
+				for j := int64(3); j <= maxMultiple; j += 2 {
+					composite := i * j
+					if composite > maxPrime {
+						panic("bug")
+					}
+					isOddComposite[composite/2] = true
+				}
+			}
+		}
+		close(output)
+	}()
+	return output
 }
